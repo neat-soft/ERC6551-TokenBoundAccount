@@ -31,9 +31,8 @@ export default function TokenLayout() {
     const [isTBADeployed, setIsTBADeployed] = useState(false);
     const [showWithdrawDlg, setShowWithdrawDlg] = useState(false);
     const [withdrawAmount, setWithdarwAmount] = useState(1);
-    const [withdrawAddress, setWithdarwAddress] = useState(
-        ""
-    );
+    const [withdrawAddress, setWithdarwAddress] = useState("");
+    const [isNFTOwner, setIsNFTOwner] = useState(false)
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [tba, setTba] = useState(null);
     let path = window.location.pathname.split("/");
@@ -70,7 +69,15 @@ export default function TokenLayout() {
         axios
             .get(`${API_URL}/token/${address}/${tokenId}`)
             .then((response) => {
+                console.log(response)
                 setNft(response?.data?.data);
+                const owner = response?.data?.data?.owner_of
+                console.log(owner, ethereum.selectedAddress)
+                if (owner && owner.toLowerCase() == ethereum.selectedAddress.toLowerCase()) {
+                    setIsNFTOwner(true)
+                } else {
+                    setIsNFTOwner(false)
+                }
                 if (
                     response &&
                     response.data &&
@@ -78,6 +85,7 @@ export default function TokenLayout() {
                     response.data.data.metadata
                 ) {
                     const mtData = JSON.parse(response.data.data.metadata);
+                   
                     setMetadata(mtData);
                 }
                 setIsLoading(false);
@@ -149,7 +157,6 @@ export default function TokenLayout() {
     };
     const onClickUseWallet = async () => {
         try {
-            console.log(tba);
             if (!ethereum.selectedAddress) {
                 SnackbarUtils.error("Please unlock your account");
                 setAssets([]);
@@ -157,7 +164,6 @@ export default function TokenLayout() {
             }
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
             const owner = await accountContractInstance.methods.owner().call();
-            console.log(owner);
             if (owner.toLowerCase() != ethereum.selectedAddress.toLowerCase()) {
                 SnackbarUtils.error("You are not owner of this NFT");
                 setAssets([]);
@@ -173,18 +179,10 @@ export default function TokenLayout() {
                 const nonZeroBalances = balances.tokenBalances.filter((token) => {
                     return token.tokenBalance !== "0" && token.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000";
                 });
-                let i = 1;
                 let tokens = [];
-                // tokens.push({
-                //     balance: ethBalance,
-                //     name: "Ether",
-                //     symbol: "ETH",
-                //     logo: "",
-                // });
                 for (let token of nonZeroBalances) {
                     // Get balance of token
                     let balance = token.tokenBalance;
-
                     // Get metadata of token
                     const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
                     // Compute token balance in human-readable format
@@ -303,9 +301,6 @@ export default function TokenLayout() {
                                 ></input>
                             </div>
                             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                {/* <button className="btn-primary" onClick={confirmWithdraw}>
-                                    Confirm
-                                </button> */}
                                 <LoadingButton
                                     className="btn-confirm"
                                     loading={sendingToken}
@@ -349,22 +344,27 @@ export default function TokenLayout() {
                                         </svg>
                                     </div>
                                 </a>
-                                {isTBADeployed ? (
-                                    <button className="btn-primary" onClick={onClickUseWallet}>
-                                        Use Wallet
-                                    </button>
-                                ) : (
-                                    <LoadingButton
-                                        className="btn-purple"
-                                        loading={deployingTBA}
-                                        fullWidth
-                                        loadingPosition="start"
-                                        startIcon={<span></span>}
-                                        onClick={deployTBA}
-                                    >
-                                        Deploy Account
-                                    </LoadingButton>
-                                )}
+                                {
+                                    tba && isNFTOwner &&  (
+                                        isTBADeployed ? (
+                                            <button className="btn-primary" onClick={onClickUseWallet}>
+                                                Use Wallet
+                                            </button>
+                                        ) : (
+                                            <LoadingButton
+                                                className="btn-purple"
+                                                loading={deployingTBA}
+                                                fullWidth
+                                                loadingPosition="start"
+                                                startIcon={<span></span>}
+                                                onClick={deployTBA}
+                                            >
+                                                Deploy Account
+                                            </LoadingButton>
+                                        )
+                                    )
+                                }
+                                
                             </div>
                             <div className="detail-body">
                                 <p>ASSETS</p>

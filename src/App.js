@@ -74,7 +74,6 @@ function App() {
                 if (web3 && accountAddress == null) {
                     await ethereum.request({ method: "eth_requestAccounts" });
                     const accounts = await web3.eth.getAccounts();
-                    console.log(accounts)
                     setAccountAddress(accounts[0]);
                     setShowWalletChoiceDlg(false)
                     

@@ -1,0 +1,125 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background-color: rgb(242, 242, 242);
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: white;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  justify-content: top;
+  font-size: calc(10px + 2vmin);
+}
+.App-header .wallet-info {
+  font-size: 16px;
+}
+.btn-purple {
+  transition-property: color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;
+  transition-property: color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;
+  transition-property: color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;
+  transition-timing-function: cubic-bezier(.4,0,.2,1);
+  transition-duration: .15s;
+  padding: 0.5rem 1rem;
+  color: white !important;
+  font-size: 18px;
+  background-image: linear-gradient(to right, rgb(108, 85, 249), rgb(157, 85, 249));
+  border-radius: 8px;
+  border-color: rgb(229,229,229);
+  cursor: pointer;
+  width: 200px !important;
+}
+button:hover {
+  transform: matrix(1.05, 0, 0, 1.05, 0, 0);
+  transition-duration: 0.15s;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-send {
+  width: 100px !important;
+}
+.btn-primary {
+  text-decoration: none;
+  padding: 4px 12px;
+  font-size: 14px;
+  background-color: rgb(38, 38, 38);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600px;
+  cursor: pointer;
+  transition: all .4s;
+  box-sizing: border-box
+}
+.btn-primary:hover{
+  background-color: rgba(38, 38, 38, .8);
+}
+.App-link {
+  color: #61dafb;
+}
+.wallet-choice-dlg-content {
+  background-color: rgba(0,0,0,.7);
+  width: 360px;
+  padding: 24px
+}
+.wallet-choice-dlg-content h2 {
+  text-align: center;
+  color: white;
+}
+.wallet-choice-dlg-content .wallet {
+  background-color: rgba(56,56,56,1);
+  transition: all .4s;
+  color: white;
+  width: 100%;
+  height: 64px;
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: bold;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  padding: 0 20px;
+  cursor: pointer;
+}
+.wallet-choice-dlg-content .wallet img {
+  width: 34px;
+}
+.wallet-choice-dlg-content .wallet span {
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 2px 38px 2px 0px;
+}
+.wallet-choice-dlg-content .wallet:hover{
+  background-color: rgba(64,64,64,1);
+  
+}
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

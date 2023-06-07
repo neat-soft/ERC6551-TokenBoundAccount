@@ -1,0 +1,110 @@
+.container {
+    min-height: 99vh;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    contain: paint;
+    align-items: center;
+    align-self: center;
+    text-align: center;
+    max-width: 80rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+.tokenName {
+    font-size: 22px;
+}
+.tokenDetails {
+    background-color: white;
+    border-radius: 0.75rem;
+    padding: 24px;
+}
+.tokenDetails .detail-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+
+}
+.tokenDetails .detail-header .exploer {
+    text-decoration-color: rgb(0, 0, 0);
+    text-decoration-line: none;
+}
+.tokenDetails .detail-header .exploer > div {
+    background:rgb(242, 242, 242);
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+}
+.tokenDetails .detail-header .exploer > div:hover{
+    transform: matrix(1.05, 0, 0, 1.05, 0, 0);
+    transition-duration: 0.15s;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tokenDetails .detail-header .exploer span {
+    color: rgb(142, 142, 142);
+    font-size: 22px;
+    font-weight: 600;
+
+}
+.tokenDetails .detail-body {
+    color: rgb(163, 163, 163);
+    
+}
+.tokenDetails .detail-body p {
+    font-size: 20px;
+}
+.tokenDetails .detail-body hr {
+    border-color: rgb(163, 163, 163);
+}
+.assets-header span {
+    width: 25%;
+    text-align: left;
+    color: black;
+    font-size: 18px;
+}
+.tokenDetails .assets {
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+}
+.tokenDetails .assets, .assets-header {
+    width: 100%;
+    display: flex;
+}
+.tokenDetails .assets span {
+    width: 25%;
+    text-align: left;
+}
+.h-5 {
+    height: 1.25rem;
+} 
+.w-5 {
+    width: 1.25rem;
+}
+.MuiDialogContent-root > div {
+    margin-bottom: 20px;
+}
+.MuiDialogContent-root label {
+    color: white;
+}
+.MuiDialogContent-root input {
+    height: 30px;
+    margin-left: 20px;
+    width: 350px;
+    padding: 4px 12px;
+}
+.withdarw-dlg h2{
+    text-align: center;
+    color: white; 
+}
+.withdarw-dlg-content {
+    background-color: rgba(0,0,0,.7);
+    width: 500px;
+    padding: 24px;
+}

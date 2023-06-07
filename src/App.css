@@ -67,6 +67,22 @@ button:hover {
 .btn-primary:hover{
   background-color: rgba(38, 38, 38, .8);
 }
+.btn-confirm {
+  text-decoration: none;
+  padding: 4px 12px !important;
+  font-size: 14px;
+  background-color: rgb(38, 38, 38) !important;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600px;
+  cursor: pointer;
+  transition: all .4s;
+  box-sizing: border-box;
+  width: 120px !important;
+  color: white !important
+  
+}
 .App-link {
   color: #61dafb;
 }

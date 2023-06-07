@@ -32,7 +32,7 @@ export default function TokenLayout() {
     const [showWithdrawDlg, setShowWithdrawDlg] = useState(false);
     const [withdrawAmount, setWithdarwAmount] = useState(1);
     const [withdrawAddress, setWithdarwAddress] = useState(
-        "0x8a5c1768EA7000a0fF29560cfa48602684931fFb"
+        ""
     );
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [tba, setTba] = useState(null);
@@ -105,7 +105,7 @@ export default function TokenLayout() {
                 const contractInstance = new web3.eth.Contract(registryABI, factoryAddress);
                 const chainId = await web3.eth.getChainId();
                 const res = await contractInstance.methods
-                    .account(implementation, chainId, address, tokenId, 2)
+                    .account(implementation, chainId, address, tokenId, 0)
                     .call();
                 if (res) {
                     setTba(res);
@@ -127,16 +127,17 @@ export default function TokenLayout() {
                 const contractInstance = new web3.eth.Contract(registryABI, factoryAddress);
                 const chainId = await web3.eth.getChainId();
                 setDeployingTBA(true);
-                await contractInstance.methods
+                const res = await contractInstance.methods
                     .createAccount(
                         implementation,
                         chainId,
                         address,
                         tokenId,
-                        2,
-                        keccak256(toUtf8Bytes("hello TBA"))
+                        0,
+                        keccak256(toUtf8Bytes("hello TBA!"))
                     )
                     .send({ from: ethereum.selectedAddress });
+                console.log(res);
                 getTBA();
                 setDeployingTBA(false);
             }
@@ -146,9 +147,9 @@ export default function TokenLayout() {
             setDeployingTBA(false);
         }
     };
-    const useWallet = async () => {
+    const onClickUseWallet = async () => {
         try {
-            console.log(tba)
+            console.log(tba);
             if (!ethereum.selectedAddress) {
                 SnackbarUtils.error("Please unlock your account");
                 setAssets([]);
@@ -168,17 +169,18 @@ export default function TokenLayout() {
                 ethBalance = ethBalance.toFixed(3);
                 const balances = await alchemy.core.getTokenBalances(tba);
                 // Remove tokens with zero balance
+                console.log(balances)
                 const nonZeroBalances = balances.tokenBalances.filter((token) => {
-                    return token.tokenBalance !== "0";
+                    return token.tokenBalance !== "0" && token.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000";
                 });
                 let i = 1;
                 let tokens = [];
-                tokens.push({
-                    balance: ethBalance,
-                    name: "Ether",
-                    symbol: "ETH",
-                    logo: "",
-                });
+                // tokens.push({
+                //     balance: ethBalance,
+                //     name: "Ether",
+                //     symbol: "ETH",
+                //     logo: "",
+                // });
                 for (let token of nonZeroBalances) {
                     // Get balance of token
                     let balance = token.tokenBalance;
@@ -227,31 +229,39 @@ export default function TokenLayout() {
                 SnackbarUtils.warning("Please select correct asset.");
                 return;
             }
+            setSendingToken(true)
             if (selectedAsset.balance < withdrawAmount) {
                 SnackbarUtils.error(
                     `You don't have enough balance of ${selectedAsset.name}. Please input correct amount.`
                 );
                 return;
             }
-            const signature = 'balanceOf(address)';
-            // Encode arguments
-            const encodedArguments = web3.eth.abi.encodeParameters(['address'], [ethereum.selectedAddress]);
+            const signature = {
+                inputs: [
+                    { internalType: "address", name: "to", type: "address" },
+                    { internalType: "uint256", name: "amount", type: "uint256" },
+                ],
+                name: "transfer",
+                type: "function",
+                outputs: [{ internalType: "bool", name: "", type: "bool" }],
+                
+            };
             // Generate byte code
-            const byteCode = web3.eth.abi.encodeFunctionSignature(signature) + encodedArguments.slice(2);
-            console.log(byteCode)
-            console.log(keccak256(toUtf8Bytes(byteCode)))
-            // return
-            // encode the function signature and arguments
-            console.log(selectedAsset.address)
+            const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
+            const byteCode = web3.eth.abi.encodeFunctionCall(signature, [withdrawAddress, value]);
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
             // const res = await accountContractInstance.methods.token().send({from: ethereum.selectedAddress})
             const res = await accountContractInstance.methods
-                .executeCall(selectedAsset.address, 1, keccak256(toUtf8Bytes(byteCode)))
-                .send({from: ethereum.selectedAddress})
+                .executeCall(selectedAsset.address, 0, byteCode)
+                .send({ from: ethereum.selectedAddress });
             console.log(res);
+            SnackbarUtils.success("Withdraw completed");
+            onClickUseWallet()
+            setSendingToken(false)
         } catch (e) {
             SnackbarUtils.warning(e);
-            console.log(e)
+            console.log(e);
+            setSendingToken(false)
         }
     };
     const closeWithdrawDlg = () => {
@@ -267,7 +277,7 @@ export default function TokenLayout() {
         <div className="container">
             <h1>NFT Details</h1>
             {isLoading ? (
-                "Loading..."
+                <CircularIndeterminate />
             ) : (
                 <Grid container spacing={2}>
                     <Dialog
@@ -293,9 +303,19 @@ export default function TokenLayout() {
                                 ></input>
                             </div>
                             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                <button className="btn-primary" onClick={confirmWithdraw}>
+                                {/* <button className="btn-primary" onClick={confirmWithdraw}>
                                     Confirm
-                                </button>
+                                </button> */}
+                                <LoadingButton
+                                    className="btn-confirm"
+                                    loading={sendingToken}
+                                    fullWidth
+                                    loadingPosition="start"
+                                    startIcon={<span></span>}
+                                    onClick={confirmWithdraw}
+                                >
+                                    Confirm
+                                </LoadingButton>
                             </div>
                         </DialogContent>
                     </Dialog>
@@ -330,7 +350,7 @@ export default function TokenLayout() {
                                     </div>
                                 </a>
                                 {isTBADeployed ? (
-                                    <button className="btn-primary" onClick={useWallet}>
+                                    <button className="btn-primary" onClick={onClickUseWallet}>
                                         Use Wallet
                                     </button>
                                 ) : (
@@ -350,10 +370,10 @@ export default function TokenLayout() {
                                 <p>ASSETS</p>
                                 <hr></hr>
                                 {loadingBalance ? (
-                                    <span>Loading assets...</span>
+                                    <CircularIndeterminate />
                                 ) : (
                                     <div style={{ position: "relative" }}>
-                                        {sendingToken && <CircularIndeterminate />}
+                                        {/* {sendingToken && <CircularIndeterminate />} */}
                                         <div className="assets-header">
                                             <span>Name:</span>
                                             <span>Symbol:</span>

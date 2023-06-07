@@ -33,7 +33,6 @@ function App() {
     const getNFTs = async () => {
         setIsLoading(true)
         axios.get(API_URL + '/wallet/' + accountAddress).then((response) => {
-            console.log('aaaaa', response)
             setNfts(response?.data?.data)
             setIsLoading(false)
         })
@@ -65,7 +64,7 @@ function App() {
       }, []);
     
       useEffect(() => {
-        // connectWallet();
+        connectWallet();
       }, [web3]);
     const connectWallet = async() => {
         try {
@@ -77,7 +76,6 @@ function App() {
                     const accounts = await web3.eth.getAccounts();
                     console.log(accounts)
                     setAccountAddress(accounts[0]);
-                    SnackbarUtils.success(`Metamask connected!`);
                     setShowWalletChoiceDlg(false)
                     
                 }
@@ -135,26 +133,7 @@ function App() {
                         </button>
                     </DialogContent>   
                     </Dialog>
-                    {/* {accountAddress ? (
-                        <div className={styles.container}>
-                        <h1>Your NFTs</h1>
-                        <p>
-                            Browse the NFTs inside your personal wallet, select one to connect a
-                            token bound smart wallet & view it&apos;s balance.
-                        </p>
-                        <NFTGrid
-                            nfts={nfts}
-                            isLoading={isLoading}
-                            emptyText={
-                                "Looks like you don't own any NFTs."
-                            }
-                        />
-                        </div>
-                    ) : (
-                        <div className={styles.container}>
-                            <h2>Connect a personal wallet to view your owned NFTs</h2>
-                        </div>
-                    )} */}
+                   
                     <RouterContainer/>
                 </div>
             </div>

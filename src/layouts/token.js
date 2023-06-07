@@ -12,6 +12,7 @@ import CircularIndeterminate from "../components/Loader";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Dialog from "@mui/material/Dialog";
 import { DialogTitle, DialogContent } from "@mui/material";
+import EtherICon from "../images/ether.png";
 import "./Token.css";
 const Web3 = require("web3");
 const alchemyConfig = {
@@ -24,17 +25,21 @@ export default function TokenLayout() {
     const [nft, setNft] = useState(null);
     const [metadata, setMetadata] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [loadingBalance, setLoadingBalance] = useState(false);
+    const [loadingTokenList, setLoadingTokenList] = useState(false);
     const [deployingTBA, setDeployingTBA] = useState(false);
     const [sendingToken, setSendingToken] = useState(false);
     const [assets, setAssets] = useState([]);
+    const [nfts, setNfts] = useState([]);
     const [isTBADeployed, setIsTBADeployed] = useState(false);
     const [showWithdrawDlg, setShowWithdrawDlg] = useState(false);
     const [withdrawAmount, setWithdarwAmount] = useState(1);
-    const [withdrawAddress, setWithdarwAddress] = useState("");
-    const [isNFTOwner, setIsNFTOwner] = useState(false)
+    const [withdrawAddress, setWithdarwAddress] = useState("0x8a5c1768EA7000a0fF29560cfa48602684931fFb");
+    const [isNFTOwner, setIsNFTOwner] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
+    const [selectedNFT, setSelectedNft] = useState(null);
+    const [showTransferNFTDlg, setShowTransferNFTDlg] = useState(false);
     const [tba, setTba] = useState(null);
+    const [canUseWallet, setCanUseWallet] = useState(false);
     let path = window.location.pathname.split("/");
     let tokenId = path[path.length - 1];
     let address = path[path.length - 2];
@@ -62,21 +67,23 @@ export default function TokenLayout() {
         getTBA();
     }, [web3]);
     useEffect(() => {
-        getToken();
+        getNFTDetail();
     }, [window.location]);
-    const getToken = async () => {
+    const getNFTDetail = async () => {
         setIsLoading(true);
         axios
             .get(`${API_URL}/token/${address}/${tokenId}`)
             .then((response) => {
-                console.log(response)
                 setNft(response?.data?.data);
-                const owner = response?.data?.data?.owner_of
-                console.log(owner, ethereum.selectedAddress)
-                if (owner && owner.toLowerCase() == ethereum.selectedAddress.toLowerCase()) {
-                    setIsNFTOwner(true)
+                const owner = response?.data?.data?.owner_of;
+                if (
+                    owner &&
+                    ethereum.selectedAddress &&
+                    owner.toLowerCase() == ethereum.selectedAddress.toLowerCase()
+                ) {
+                    setIsNFTOwner(true);
                 } else {
-                    setIsNFTOwner(false)
+                    setIsNFTOwner(false);
                 }
                 if (
                     response &&
@@ -85,7 +92,7 @@ export default function TokenLayout() {
                     response.data.data.metadata
                 ) {
                     const mtData = JSON.parse(response.data.data.metadata);
-                   
+
                     setMetadata(mtData);
                 }
                 setIsLoading(false);
@@ -122,12 +129,76 @@ export default function TokenLayout() {
                         setIsTBADeployed(false);
                     } else {
                         setIsTBADeployed(true);
+                        getTokenList(res);
                     }
                 }
             }
         } catch (e) {
             console.log(e);
         }
+    };
+    const getTokenList = async (tba) => {
+        setLoadingTokenList(true);
+        if (!tba) {
+            setLoadingTokenList(false);
+            return;
+        }
+        let ethBalance = await web3.eth.getBalance(tba);
+        ethBalance = ethBalance / Math.pow(10, 18);
+        ethBalance = ethBalance.toFixed(3);
+        const balances = await alchemy.core.getTokenBalances(tba);
+        const nftList = await alchemy.nft.getNftsForOwner(tba);
+        const nonZeroBalances = balances.tokenBalances.filter((token) => {
+            return (
+                token.tokenBalance !== "0" &&
+                token.tokenBalance !==
+                    "0x0000000000000000000000000000000000000000000000000000000000000000"
+            );
+        });
+        let nfts = [];
+        for (let nft of nftList.ownedNfts) {
+            nfts.push({
+                name: nft.contract.name,
+                symbol: nft.contract.symbol,
+                balance: nft.balance,
+                address: nft.contract.address,
+                image: nft.media && nft.media.length > 0 ? nft.media[0].gateway : null,
+                tokenId: nft.tokenId
+            });
+        }
+        console.log(nfts);
+        let tokens = [];
+        tokens.push({
+            balance: ethBalance,
+            name: "Goerli Ether",
+            symbol: "ETH",
+            logo: null,
+            decimals: 18,
+            address: "0x0000000000000000000000000000000000000000",
+        });
+        for (let token of nonZeroBalances) {
+            
+            // Get balance of token
+            let balance = token.tokenBalance;
+            // Get metadata of token
+            const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
+            console.log(metadata)
+            // Compute token balance in human-readable format
+            balance = balance / Math.pow(10, metadata.decimals);
+            balance = balance.toFixed(3);
+            // Print name, balance, and symbol of token
+            tokens.push({
+                balance: balance,
+                name: metadata.name,
+                symbol: metadata.symbol,
+                logo: metadata.logo,
+                decimals: metadata.decimals,
+                address: token.contractAddress,
+            });
+        }
+        setAssets(tokens);
+        setNfts(nfts);
+        setLoadingTokenList(false);
     };
     const deployTBA = async () => {
         try {
@@ -164,54 +235,31 @@ export default function TokenLayout() {
             }
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
             const owner = await accountContractInstance.methods.owner().call();
-            if (owner.toLowerCase() != ethereum.selectedAddress.toLowerCase()) {
+            if (
+                owner &&
+                ethereum.selectedAddress &&
+                owner.toLowerCase() != ethereum.selectedAddress.toLowerCase()
+            ) {
                 SnackbarUtils.error("You are not owner of this NFT");
                 setAssets([]);
                 return;
             } else {
-                setLoadingBalance(true);
-                let ethBalance = await web3.eth.getBalance(tba);
-                ethBalance = ethBalance / Math.pow(10, 18);
-                ethBalance = ethBalance.toFixed(3);
-                const balances = await alchemy.core.getTokenBalances(tba);
-                // Remove tokens with zero balance
-                console.log(balances)
-                const nonZeroBalances = balances.tokenBalances.filter((token) => {
-                    return token.tokenBalance !== "0" && token.tokenBalance !== "0x0000000000000000000000000000000000000000000000000000000000000000";
-                });
-                let tokens = [];
-                for (let token of nonZeroBalances) {
-                    // Get balance of token
-                    let balance = token.tokenBalance;
-                    // Get metadata of token
-                    const metadata = await alchemy.core.getTokenMetadata(token.contractAddress);
-                    // Compute token balance in human-readable format
-                    balance = balance / Math.pow(10, metadata.decimals);
-                    balance = balance.toFixed(3);
-                    // Print name, balance, and symbol of token
-                    tokens.push({
-                        balance: balance,
-                        name: metadata.name,
-                        symbol: metadata.symbol,
-                        logo: metadata.logo,
-                        decimals: metadata.decimals,
-                        address: token.contractAddress,
-                    });
-                }
-                setAssets(tokens);
-                setLoadingBalance(false);
+                setCanUseWallet(true);
             }
         } catch (e) {
             console.log(e);
             SnackbarUtils.error(e);
             setAssets([]);
-            setLoadingBalance(false);
+            setCanUseWallet(false);
         }
     };
     const withdraw = async (asset) => {
-        console.log(asset);
         setSelectedAsset(asset);
         setShowWithdrawDlg(true);
+    };
+    const transferNFT = (nft) => {
+        setSelectedNft(nft);
+        setShowTransferNFTDlg(true);
     };
     const confirmWithdraw = async () => {
         try {
@@ -227,7 +275,7 @@ export default function TokenLayout() {
                 SnackbarUtils.warning("Please select correct asset.");
                 return;
             }
-            setSendingToken(true)
+            setSendingToken(true);
             if (selectedAsset.balance < withdrawAmount) {
                 SnackbarUtils.error(
                     `You don't have enough balance of ${selectedAsset.name}. Please input correct amount.`
@@ -242,28 +290,94 @@ export default function TokenLayout() {
                 name: "transfer",
                 type: "function",
                 outputs: [{ internalType: "bool", name: "", type: "bool" }],
-                
             };
             // Generate byte code
-            const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
+            // const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
+            let value = Number(withdrawAmount * Math.pow(10, selectedAsset.decimals));
+            value = web3.utils.toBN(value).toString();
+            // return
             const byteCode = web3.eth.abi.encodeFunctionCall(signature, [withdrawAddress, value]);
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
-            // const res = await accountContractInstance.methods.token().send({from: ethereum.selectedAddress})
-            const res = await accountContractInstance.methods
+            if (selectedAsset.symbol == "ETH") {
+                const res = await accountContractInstance.methods
+                .executeCall(withdrawAddress, web3.utils.toWei(withdrawAmount, 'ether'), keccak256(toUtf8Bytes("")))
+                .send({ from: ethereum.selectedAddress });
+            } else {
+                const res = await accountContractInstance.methods
                 .executeCall(selectedAsset.address, 0, byteCode)
                 .send({ from: ethereum.selectedAddress });
-            console.log(res);
+            }
+            
             SnackbarUtils.success("Withdraw completed");
-            onClickUseWallet()
-            setSendingToken(false)
+            getTokenList(tba);
+            setShowWithdrawDlg(false);
+            setSendingToken(false);
         } catch (e) {
             SnackbarUtils.warning(e);
             console.log(e);
-            setSendingToken(false)
+            getTokenList(tba);
+            setShowWithdrawDlg(false);
+            setSendingToken(false);
+        }
+    };
+    const confirmTransferNFT = async () => {
+        try {
+            if (!withdrawAddress || withdrawAddress == "") {
+                SnackbarUtils.warning("Please input withdraw address");
+                return;
+            }
+            if (!withdrawAmount || withdrawAmount <= 0) {
+                SnackbarUtils.warning("Please input withdraw amount");
+                return;
+            }
+            if (!selectedNFT) {
+                SnackbarUtils.warning("Please select correct asset.");
+                return;
+            }
+            setSendingToken(true);
+            if (selectedNFT.balance < withdrawAmount) {
+                SnackbarUtils.error(
+                    `You don't have enough balance of ${selectedNFT.name}. Please input correct amount.`
+                );
+                return;
+            }
+            const signature = {
+                inputs: [
+                    { internalType: "address", name: "from", type: "address" },
+                    { internalType: "address", name: "to", type: "address" },
+                    { internalType: "uint256", name: "tokenId", type: "uint256" },
+                ],
+                name: "transferFrom",
+                type: "function",
+                outputs: [],                
+            };
+            // Generate byte code
+            const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
+            const byteCode = web3.eth.abi.encodeFunctionCall(signature, [tba, withdrawAddress, selectedNFT.tokenId]);
+
+            
+            const accountContractInstance = new web3.eth.Contract(accountABI, tba);
+            // const res = await accountContractInstance.methods.token().send({from: ethereum.selectedAddress})
+            const res = await accountContractInstance.methods
+                .executeCall(selectedNFT.address, 0, byteCode)
+                .send({ from: ethereum.selectedAddress });
+            SnackbarUtils.success("Transfer completed");
+            getTokenList(tba);
+            setShowTransferNFTDlg(false);
+            setSendingToken(false);
+        } catch (e) {
+            SnackbarUtils.warning(e);
+            console.log(e);
+            setSendingToken(false);
+            getTokenList(tba);
+            setShowTransferNFTDlg(false);
         }
     };
     const closeWithdrawDlg = () => {
         setShowWithdrawDlg(false);
+    };
+    const closeTransferNFTDlg = () => {
+        setShowTransferNFTDlg(false);
     };
     const onChangeWithdrawAmount = (e) => {
         setWithdarwAmount(e.target.value);
@@ -314,6 +428,42 @@ export default function TokenLayout() {
                             </div>
                         </DialogContent>
                     </Dialog>
+                    <Dialog
+                        open={showTransferNFTDlg}
+                        onClose={closeTransferNFTDlg}
+                        className="withdarw-dlg"
+                    >
+                        <DialogContent className="withdarw-dlg-content">
+                            <DialogTitle>Transfer</DialogTitle>
+                            <div>
+                                <label>Amount:</label>
+                                <input
+                                    onChange={onChangeWithdrawAmount}
+                                    type="number"
+                                    value={withdrawAmount}
+                                ></input>
+                            </div>
+                            <div>
+                                <label>Address:</label>
+                                <input
+                                    onChange={onChangeWithdrawAddress}
+                                    value={withdrawAddress}
+                                ></input>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                <LoadingButton
+                                    className="btn-confirm"
+                                    loading={sendingToken}
+                                    fullWidth
+                                    loadingPosition="start"
+                                    startIcon={<span></span>}
+                                    onClick={confirmTransferNFT}
+                                >
+                                    Confirm
+                                </LoadingButton>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                     <Grid xs={6}>
                         <img style={{ width: "90%" }} src={metadata?.image} />
                         <p className="tokenName">{metadata?.name}</p>
@@ -344,52 +494,74 @@ export default function TokenLayout() {
                                         </svg>
                                     </div>
                                 </a>
-                                {
-                                    tba && isNFTOwner &&  (
-                                        isTBADeployed ? (
-                                            <button className="btn-primary" onClick={onClickUseWallet}>
-                                                Use Wallet
-                                            </button>
-                                        ) : (
-                                            <LoadingButton
-                                                className="btn-purple"
-                                                loading={deployingTBA}
-                                                fullWidth
-                                                loadingPosition="start"
-                                                startIcon={<span></span>}
-                                                onClick={deployTBA}
-                                            >
-                                                Deploy Account
-                                            </LoadingButton>
-                                        )
-                                    )
-                                }
-                                
+                                {tba &&
+                                    isNFTOwner &&
+                                    (isTBADeployed ? (
+                                        <button className="btn-primary" onClick={onClickUseWallet}>
+                                            Use Wallet
+                                        </button>
+                                    ) : (
+                                        <LoadingButton
+                                            className="btn-purple"
+                                            loading={deployingTBA}
+                                            fullWidth
+                                            loadingPosition="start"
+                                            startIcon={<span></span>}
+                                            onClick={deployTBA}
+                                        >
+                                            Deploy Account
+                                        </LoadingButton>
+                                    ))}
                             </div>
                             <div className="detail-body">
-                                <p>ASSETS</p>
-                                <hr></hr>
-                                {loadingBalance ? (
+                                {loadingTokenList ? (
                                     <CircularIndeterminate />
                                 ) : (
                                     <div style={{ position: "relative" }}>
-                                        {/* {sendingToken && <CircularIndeterminate />} */}
+                                        <p>ASSETS</p>
                                         <div className="assets-header">
-                                            <span>Name:</span>
-                                            <span>Symbol:</span>
-                                            <span>Balance:</span>
+                                            <span>Portfolio</span>
+                                            <span>Name</span>
+                                            <span>Symbol</span>
+                                            <span>Balance</span>
                                         </div>
+                                        <hr></hr>
+                                        {/* {sendingToken && <CircularIndeterminate />} */}
+
                                         {assets.map((asset, index) => (
-                                            <div className="assets" key={index}>
+                                            <div className="assets" key={`assets_${index}`}>
+                                                <span>
+                                                    <img src={EtherICon}></img>
+                                                </span>
                                                 <span>{asset.name}</span>
                                                 <span>{asset.symbol}</span>
                                                 <span>{asset.balance}</span>
-                                                <button
-                                                    className="btn-primary"
-                                                    onClick={() => withdraw(asset)}
-                                                >
-                                                    Withdraw
-                                                </button>
+                                                {canUseWallet && (
+                                                    <button
+                                                        className="btn-primary"
+                                                        onClick={() => withdraw(asset)}
+                                                    >
+                                                        Withdraw
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {nfts.map((nft, index) => (
+                                            <div className="assets" key={`nfts_${index}`}>
+                                                <span>
+                                                    <img src={nft.image}></img>
+                                                </span>
+                                                <span>{nft.name}</span>
+                                                <span>{nft.symbol}</span>
+                                                <span>{nft.balance}</span>
+                                                {canUseWallet && (
+                                                    <button
+                                                        className="btn-primary"
+                                                        onClick={() => transferNFT(nft)}
+                                                    >
+                                                        Transfer
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

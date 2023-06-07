@@ -63,7 +63,7 @@
     border-color: rgb(163, 163, 163);
 }
 .assets-header span {
-    width: 25%;
+    width: 20%;
     text-align: left;
     color: black;
     font-size: 18px;
@@ -71,15 +71,18 @@
 .tokenDetails .assets {
     display: flex;
     align-items: center;
-    padding: 4px 12px;
 }
 .tokenDetails .assets, .assets-header {
     width: 100%;
     display: flex;
 }
 .tokenDetails .assets span {
-    width: 25%;
+    width: 20%;
     text-align: left;
+}
+.tokenDetails .assets img {
+    width: 50px;
+    height: 50px;
 }
 .h-5 {
     height: 1.25rem;

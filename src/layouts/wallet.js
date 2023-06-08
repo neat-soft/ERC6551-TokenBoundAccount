@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-
 import axios from "axios";
-import { API_URL } from "../const";
 import NFTGrid from "../components/NFT/NFTGrid";
 import SnackbarUtils from '../utils/SnackbarUtils'
 import styles from "../styles/Main.module.css";
+console.log(process.env.REACT_APP_API_URL)
 export default function WalletLayout() {
     const [nfts, setNfts] = useState([])
     const [isLoading, setIsLoading] = useState(false)
@@ -18,7 +17,7 @@ export default function WalletLayout() {
     });
     const getNFTs = async () => {
         setIsLoading(true)
-        axios.get(API_URL + '/wallet/' + address).then((response) => {
+        axios.get(process.env.REACT_APP_API_URL + '/wallet/' + address).then((response) => {
             setNfts(response?.data?.data)
             setIsLoading(false)
         })

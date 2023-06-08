@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import Dialog from "@mui/material/Dialog";
 import  MetamaskIcon from './images/metamask-icon.png'
 import { DialogTitle, DialogContent} from "@mui/material";
@@ -9,10 +8,7 @@ import SnackbarUtils from './utils/SnackbarUtils'
 import { SnackbarUtilsConfigurator } from "./utils/SnackbarUtils";
 import { BrowserRouter } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
-import NFTGrid from "./components/NFT/NFTGrid";
 import RouterContainer from "./Routes";
-import { API_URL } from "./const";
-import styles from "./styles/Main.module.css";
 import './App.css';
 const Web3 = require("web3");
 
@@ -21,8 +17,6 @@ function App() {
     const [haveMetaMask, setHaveMetaMask] = useState("");
     const [accountAddress, setAccountAddress] = useState(null);
     const [showWalletChoiceDlg, setShowWalletChoiceDlg] = useState(false);
-    const [nfts, setNfts] = useState([])
-    const [isLoading, setIsLoading] = useState(false)
     const openWalletChoiceDlg = () => {
         setShowWalletChoiceDlg(true)
     }

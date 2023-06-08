@@ -3,11 +3,9 @@ import { Alchemy, Network } from "alchemy-sdk";
 import { keccak256, toUtf8Bytes } from "ethers";
 import axios from "axios";
 import Grid from "@mui/material/Grid";
-import { API_URL } from "../const";
 import SnackbarUtils from "../utils/SnackbarUtils";
 import { registryABI } from "../contract/Registry";
 import { accountABI } from "../contract/Account";
-import { implementation, factoryAddress } from "../const";
 import CircularIndeterminate from "../components/Loader";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Dialog from "@mui/material/Dialog";
@@ -19,6 +17,9 @@ const alchemyConfig = {
     apiKey: "aD0TwthJhlJ1oZi91vnabibGPCkdz9_4",
     network: Network.ETH_GOERLI,
 };
+const factoryAddress = process.env.REACT_APP_Factory_Address
+const implementation = process.env.REACT_APP_Implementation_Address
+console.log(implementation, factoryAddress)
 const alchemy = new Alchemy(alchemyConfig);
 export default function TokenLayout() {
     const [web3, setWeb3] = useState(null);
@@ -32,8 +33,8 @@ export default function TokenLayout() {
     const [nfts, setNfts] = useState([]);
     const [isTBADeployed, setIsTBADeployed] = useState(false);
     const [showWithdrawDlg, setShowWithdrawDlg] = useState(false);
-    const [withdrawAmount, setWithdarwAmount] = useState(1);
-    const [withdrawAddress, setWithdarwAddress] = useState("0x8a5c1768EA7000a0fF29560cfa48602684931fFb");
+    const [withdrawAmount, setWithdarwAmount] = useState(0);
+    const [withdrawAddress, setWithdarwAddress] = useState("");
     const [isNFTOwner, setIsNFTOwner] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState(null);
     const [selectedNFT, setSelectedNft] = useState(null);
@@ -77,7 +78,7 @@ export default function TokenLayout() {
     const getNFTDetail = async () => {
         setIsLoading(true);
         axios
-            .get(`${API_URL}/token/${address}/${tokenId}`)
+            .get(`${process.env.REACT_APP_API_URL}/token/${address}/${tokenId}`)
             .then((response) => {
                 setNft(response?.data?.data);
                 const owner = response?.data?.data?.owner_of;

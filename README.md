@@ -14,9 +14,11 @@ Install all required npm modules
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
+Run this cli in your local only.\
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
+
+***Run server as a daemon with pm2 in your server.***
 
 ### `npm run build`
 
@@ -28,7 +30,7 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-## start app with pm2
+## Start app with pm2
 
 **Install pm2**
 
@@ -38,3 +40,11 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 **Run with pm2**
 
 > `pm2 start npm -- start`
+
+## Edit .env
+
+**PORT**: Default is 3003 \
+**REACT_APP_API_URL**: your backend url Default: http://localhost:3030/api\
+Change it to your server ip or domain \
+**REACT_APP_Factory_Address**: ERC6551 Registry contract address \
+**REACT_APP_Implementation_Address** ERC6551 Acount contract address

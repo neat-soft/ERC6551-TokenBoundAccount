@@ -136,7 +136,9 @@ export default function TokenLayout() {
         } catch (e) {
             console.log(e);
         }
+        
     };
+    
     const getTokenList = async (tba) => {
         setLoadingTokenList(true);
         if (!tba) {
@@ -162,7 +164,7 @@ export default function TokenLayout() {
                 symbol: nft.contract.symbol,
                 balance: nft.balance,
                 address: nft.contract.address,
-                image: nft.media && nft.media.length > 0 ? nft.media[0].gateway : null,
+                image: nft.media && nft.media.length > 0 ? nft.media[0]?.thumbnail : null,
                 tokenId: nft.tokenId
             });
         }
@@ -206,6 +208,9 @@ export default function TokenLayout() {
                 const contractInstance = new web3.eth.Contract(registryABI, factoryAddress);
                 const chainId = await web3.eth.getChainId();
                 setDeployingTBA(true);
+                
+                // Initialize proxy contract
+                const byteCode = 0x8129fc1c;
                 const res = await contractInstance.methods
                     .createAccount(
                         implementation,
@@ -213,7 +218,7 @@ export default function TokenLayout() {
                         address,
                         tokenId,
                         0,
-                        keccak256(toUtf8Bytes("hello TBA!"))
+                        byteCode
                     )
                     .send({ from: ethereum.selectedAddress });
                 console.log(res);
@@ -292,10 +297,8 @@ export default function TokenLayout() {
                 outputs: [{ internalType: "bool", name: "", type: "bool" }],
             };
             // Generate byte code
-            // const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
             let value = Number(withdrawAmount * Math.pow(10, selectedAsset.decimals));
             value = web3.utils.toBN(value).toString();
-            // return
             const byteCode = web3.eth.abi.encodeFunctionCall(signature, [withdrawAddress, value]);
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
             if (selectedAsset.symbol == "ETH") {
@@ -352,12 +355,8 @@ export default function TokenLayout() {
                 outputs: [],                
             };
             // Generate byte code
-            const value = web3.utils.toWei(withdrawAmount.toString(), "ether");
             const byteCode = web3.eth.abi.encodeFunctionCall(signature, [tba, withdrawAddress, selectedNFT.tokenId]);
-
-            
             const accountContractInstance = new web3.eth.Contract(accountABI, tba);
-            // const res = await accountContractInstance.methods.token().send({from: ethereum.selectedAddress})
             const res = await accountContractInstance.methods
                 .executeCall(selectedNFT.address, 0, byteCode)
                 .send({ from: ethereum.selectedAddress });

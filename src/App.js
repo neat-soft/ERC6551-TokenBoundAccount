@@ -30,32 +30,21 @@ function App() {
         setShowWalletChoiceDlg(false)
     }
     let { ethereum } = window;
-    const getNFTs = async () => {
-        setIsLoading(true)
-        axios.get(API_URL + '/wallet/' + accountAddress).then((response) => {
-            setNfts(response?.data?.data)
-            setIsLoading(false)
-        })
-        .catch(err => {
-            console.log(err)
-            SnackbarUtils.error(
-                err.message
-            );
-            setIsLoading(false)
-        }); 
-    }
+    
     useEffect(() => {
         const loadWeb3 = async () => {
           if (ethereum) {
             const web3 = new Web3(ethereum);
             try {
               setWeb3(web3);
+              setShowWalletChoiceDlg(false)
             } catch (error) {
               console.error(error);
             }
           } else if (window.web3) {
             const web3 = new Web3(window.web3.currentProvider);
             setWeb3(web3);
+            setShowWalletChoiceDlg(false)
           } else {
             console.error('No web3 provider detected');
           }

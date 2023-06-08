@@ -44,6 +44,11 @@ export default function TokenLayout() {
     let tokenId = path[path.length - 1];
     let address = path[path.length - 2];
     let { ethereum } = window;
+    // Listen for the "accountsChanged" event
+    ethereum.on("accountsChanged", function (accounts) {
+    // Handle the new accounts array
+        window.location.replace(`/wallet/${accounts[0]}`);
+    });
     useEffect(() => {
         const loadWeb3 = async () => {
             if (ethereum) {
@@ -117,9 +122,10 @@ export default function TokenLayout() {
     const getTBA = async () => {
         try {
             if (web3) {
+                
                 const contractInstance = new web3.eth.Contract(registryABI, factoryAddress);
                 const chainId = await web3.eth.getChainId();
-                const res = await contractInstance.methods
+                let res = await contractInstance.methods
                     .account(implementation, chainId, address, tokenId, 0)
                     .call();
                 if (res) {
@@ -280,13 +286,13 @@ export default function TokenLayout() {
                 SnackbarUtils.warning("Please select correct asset.");
                 return;
             }
-            setSendingToken(true);
             if (selectedAsset.balance < withdrawAmount) {
                 SnackbarUtils.error(
                     `You don't have enough balance of ${selectedAsset.name}. Please input correct amount.`
                 );
                 return;
             }
+            setSendingToken(true);
             const signature = {
                 inputs: [
                     { internalType: "address", name: "to", type: "address" },
@@ -465,7 +471,7 @@ export default function TokenLayout() {
                     </Dialog>
                     <Grid xs={6}>
                         <img style={{ width: "90%" }} src={metadata?.image} />
-                        <p className="tokenName">{metadata?.name}</p>
+                        <p className="tokenName">{nft?.name}</p>
                     </Grid>
                     <Grid xs={6}>
                         <div className="tokenDetails">

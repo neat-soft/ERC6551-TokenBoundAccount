@@ -10,6 +10,12 @@ export default function WalletLayout() {
     const [isLoading, setIsLoading] = useState(false)
     let path = window.location.pathname.split('/')
     let address = path[path.length - 1]
+    const provider = window.ethereum;
+    // Listen for the "accountsChanged" event
+    provider.on("accountsChanged", function (accounts) {
+    // Handle the new accounts array
+        window.location.replace(`/wallet/${accounts[0]}`);
+    });
     const getNFTs = async () => {
         setIsLoading(true)
         axios.get(API_URL + '/wallet/' + address).then((response) => {
